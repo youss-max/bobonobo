@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>bobonobo — Marché vivant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#000;
+  color:white;
+  font-family:Arial;
+}
+
+header{
+  text-align:center;
+  padding:14px;
+  font-size:20px;
+  background:#020;
+  border-bottom:2px solid #0f0;
+}
+
+/* CREATEURS */
+.creators{
+  background:#020;
+  border:2px solid #0f0;
+  border-radius:10px;
+  padding:10px;
+  margin:12px;
+  box-shadow:0 0 15px #0f0;
+}
+
+.creators h2{
+  margin:0 0 8px 0;
+  font-size:18px;
+  text-align:center;
+  color:#0f0;
+}
+
+.creator{
+  padding:6px;
+  border-bottom:1px solid #0f0;
+  font-size:15px;
+}
+
+.cross{
+  color:red;
+  font-weight:bold;
+  margin-left:6px;
+}
+
+/* LAYOUT */
+.container{
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:12px;
+  padding:12px;
+}
+
+.chart-box{
+  background:#020;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 0 25px #0f0;
+}
+
+.mails{
+  background:#010;
+  padding:10px;
+  border-radius:10px;
+  max-height:520px;
+  overflow-y:auto;
+}
+
+.mail{
+  background:#030;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:6px;
+  cursor:pointer;
+  border:1px solid #0f0;
+  font-size:14px;
+}
+
+.mail:hover{
+  background:#061;
+}
+
+.fullscreen{
+  margin-top:10px;
+  padding:10px;
+  width:100%;
+  cursor:pointer;
+  background:#040;
+  color:white;
+  border:none;
+  font-size:16px;
+}
+
+/* POPUP MAIL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-content{
+  background:#020;
+  padding:20px;
+  border-radius:10px;
+  width:320px;
+  border:2px solid #0f0;
+}
+
+@media(max-width:900px){
+  .container{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🔵 Liquide | 🔴 Bitcoin | 🟢 Carte | ⚪ Total — en milliards
+</header>
+
+<!-- CREATEURS -->
+<div class="creators">
+  <h2>Créateurs de l’entreprise</h2>
+  <div class="creator">✅ Amar</div>
+  <div class="creator">✅ Youssef</div>
+  <div class="creator">✅ Naofel</div>
+  <div class="creator">✅ Gabriel</div>
+  <div class="creator">✅ Pablo <span class="cross">✖</span></div>
+</div>
+
+<div class="container">
+
+  <!-- GRAPHIQUE -->
+  <div class="chart-box">
+    <canvas id="graph"></canvas>
+    <button class="fullscreen" onclick="fullscreen()">Plein écran</button>
+  </div>
+
+  <!-- MAILS -->
+  <div class="mails">
+
+    <div class="mail" onclick="openMail('Elon Musk','Une annonce mondiale importante arrivera bientôt. Les marchés technologiques pourraient être fortement impactés.')">
+      📩 Elon Musk — Annonce mondiale
+    </div>
+
+    <div class="mail" onclick="openMail('Banque Centrale','Un mouvement financier inhabituel a été détecté sur plusieurs comptes. Surveillance renforcée en cours.')">
+      📩 Banque Centrale — Alerte mouvement
+    </div>
+
+    <div class="mail" onclick="openMail('Sécurité','Plusieurs tentatives d’accès ont été bloquées automatiquement. Aucun danger immédiat.')">
+      📩 Sécurité — Tentatives bloquées
+    </div>
+
+    <div class="mail" onclick="openMail('Crypto Marché','Une volatilité exceptionnelle touche actuellement les valeurs numériques mondiales.')">
+      📩 Crypto — Volatilité extrême
+    </div>
+
+    <div class="mail" onclick="openMail('Système Global','Une mise à jour importante du système financier mondial est prévue cette nuit.')">
+      📩 Système — Mise à jour
+    </div>
+
+    <div class="mail" onclick="openMail('Investissement','De nouvelles opportunités d’investissement long terme sont en cours d’analyse.')">
+      📩 Investissement — Opportunités
+    </div>
+
+  </div>
+
+</div>
+
+<!-- POPUP MAIL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="mailTitle"></h3>
+    <p id="mailText"></p>
+    <button onclick="closeMail()">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* ANNÉES 2013 → 3013 */
+const years=[];
+for(let y=2013;y<=3013;y++){years.push(y);}
+
+/* DONNÉES QUI MONTENT ET DESCENDENT */
+function genWave(base,amp){
+  let v=base;
+  return years.map(()=>{
+    v += (Math.random()*amp - amp/2);
+    if(v<50) v=50;
+    return Math.round(v);
+  });
+}
+
+let dataBlue=genWave(800,120);
+let dataRed=genWave(1200,180);
+let dataGreen=genWave(700,100);
+let dataWhite=dataBlue.map((v,i)=>v+dataRed[i]+dataGreen[i]);
+
+const ctx=document.getElementById('graph').getContext('2d');
+
+const chart=new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:years,
+    datasets:[
+      {label:'Liquide',data:dataBlue,borderColor:'#00f',pointRadius:0},
+      {label:'Bitcoin',data:dataRed,borderColor:'#f00',pointRadius:0},
+      {label:'Carte',data:dataGreen,borderColor:'#0f0',pointRadius:0},
+      {label:'Total',data:dataWhite,borderColor:'#fff',pointRadius:0}
+    ]
+  },
+  options:{
+    responsive:true,
+    animation:false,
+    scales:{
+      y:{
+        ticks:{
+          callback:(v)=>v+' Md'
+        }
+      }
+    }
+  }
+});
+
+/* ANIMATION TEMPS RÉEL */
+setInterval(()=>{
+  dataBlue.push(dataBlue[dataBlue.length-1] + (Math.random()*120-60));
+  dataRed.push(dataRed[dataRed.length-1] + (Math.random()*180-90));
+  dataGreen.push(dataGreen[dataGreen.length-1] + (Math.random()*100-50));
+  dataWhite.push(
+    dataBlue[dataBlue.length-1] +
+    dataRed[dataRed.length-1] +
+    dataGreen[dataGreen.length-1]
+  );
+
+  dataBlue.shift();
+  dataRed.shift();
+  dataGreen.shift();
+  dataWhite.shift();
+
+  chart.update();
+},120);
+
+/* MAILS */
+function openMail(title,text){
+  document.getElementById('mailTitle').innerText=title;
+  document.getElementById('mailText').innerText=text;
+  document.getElementById('modal').style.display='flex';
+}
+
+function closeMail(){
+  document.getElementById('modal').style.display='none';
+}
+
+/* PLEIN ÉCRAN */
+function fullscreen(){
+  document.documentElement.requestFullscreen();
+}
+</script>
+
+</body>
+</html>
